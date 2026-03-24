@@ -107,6 +107,15 @@ Response may be raw JSON **or** `{"key": "<base64-encoded-json>"}` — handled b
 5. No nonce on the review submission form (handled server-side by external API).
 6. `oninput` inline handler on color picker syncs hex display — not a security issue (admin-only).
 
+## Auto-Update System
+- **Updater file**: `includes/updater.php`
+- **Version manifest**: `version.json` (repo root)
+- **Hook**: `site_transient_update_plugins` (fires on read)
+- **Manifest URL**: `https://raw.githubusercontent.com/XMS-Ai/XMS-real-reviews-Wordpress-plugin/master/version.json`
+- **Download URL**: `https://github.com/XMS-Ai/XMS-real-reviews-Wordpress-plugin/archive/refs/heads/master.zip`
+- **Folder fix**: `upgrader_source_selection` filter renames extracted folder to `real-reviews-suite-v2.1`
+- **To release**: bump version in `real-reviews-suite.php` + `version.json`, then push. No GitHub Releases needed.
+
 ## Growth Roadmap Signals
 - Dashboard is an iframe to external client area (decoupled from plugin code)
 - API base URLs suggest a SaaS backend owned by the same team
