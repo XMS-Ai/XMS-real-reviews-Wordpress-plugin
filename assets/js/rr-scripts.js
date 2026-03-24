@@ -132,10 +132,14 @@
 
         /* ── Info panel ── */
         if (infoPanel) {
-            var avg     = parseFloat(el.dataset.avg)     || 0;
-            var cnt     = parseInt(el.dataset.total)     || total;
-            var company = el.dataset.company             || '';
-            var avgR    = Math.round(avg);
+            var avg        = parseFloat(el.dataset.avg)      || 0;
+            var cnt        = parseInt(el.dataset.total)      || total;
+            var company    = el.dataset.company              || '';
+            var companyId  = el.dataset.companyId            || '';
+            var avgR       = Math.round(avg);
+            var profileUrl = companyId
+                ? 'https://realreviewsbyrp.com/' + companyId
+                : 'https://realreviewsbyrp.com/';
 
             infoPanel.innerHTML =
                 '<div class="rrc-info-header">'
@@ -158,6 +162,7 @@
                 +   '</div>'
                 +   '<div class="rrc-info-based">Based on <strong>' + cnt + '</strong> verified reviews</div>'
                 + '</div>'
+                + '<a class="rrc-info-cta" href="' + profileUrl + '" target="_blank" rel="noopener noreferrer">See More Reviews &#8594;</a>'
                 + '<a class="rrc-info-brand-link" href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener noreferrer">'
                 +   '<span style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;">powered by</span>'
                 +   '<span>'

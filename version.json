@@ -1,7 +1,7 @@
 {
-  "version": "4.6",
+  "version": "4.7",
   "download_url": "https://github.com/XMS-Ai/XMS-real-reviews-Wordpress-plugin/archive/refs/heads/master.zip",
   "requires": "5.6",
   "tested": "6.7",
-  "changelog": "<ul><li><strong>New:</strong> Shortcode params — filter by source, min_stars, limit, title</li><li><strong>New:</strong> [real_reviews_badge] — floating Trust Badge widget</li><li><strong>New:</strong> [real_reviews_featured] — Featured Review quote block</li><li><strong>New:</strong> [real_reviews_score] — Inline score + stars widget</li><li><strong>Improvement:</strong> Carousel info panel with RealReviews dark branding</li></ul>"
+  "changelog": "<ul><li><strong>New:</strong> Carousel info panel — &ldquo;See More Reviews&rdquo; button links to business profile</li><li><strong>New:</strong> Grid — &ldquo;See All Reviews&rdquo; CTA button (green, pill style)</li><li><strong>New:</strong> Trust Badge — &ldquo;See all reviews&rdquo; link at bottom</li><li><strong>New:</strong> Inline Score widget now links directly to business profile page</li><li><strong>Improvement:</strong> All widgets link to realreviewsbyrp.com/{company_id}</li></ul>"
 }

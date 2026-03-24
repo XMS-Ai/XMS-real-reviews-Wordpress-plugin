@@ -51,9 +51,10 @@ add_shortcode('real_reviews', function ($atts) {
         $src = $r['reviewSite'] ?? 'Other';
         $sources[$src] = ($sources[$src] ?? 0) + 1;
     }
-    $avg         = $count ? round($total / $count, 1) : 0;
-    $avg_rounded = round($avg);
-    $container_id = 'rr_grid_' . uniqid();
+    $avg            = $count ? round($total / $count, 1) : 0;
+    $avg_rounded    = round($avg);
+    $company_id_opt = get_option('real_reviews_company_id', 'Com0000DEMO');
+    $container_id   = 'rr_grid_' . uniqid();
 
     wp_enqueue_style('rr-suite-style');
     wp_enqueue_script('rr-suite-scripts');
@@ -92,6 +93,14 @@ add_shortcode('real_reviews', function ($atts) {
         <?php endif; ?>
 
         <div class="rr-grid"></div>
+
+        <div class="rr-see-all-wrap">
+            <a class="rr-see-all-btn"
+               href="https://realreviewsbyrp.com/<?php echo esc_attr($company_id_opt); ?>"
+               target="_blank" rel="noopener noreferrer">
+                See All Reviews &rarr;
+            </a>
+        </div>
 
         <div class="rr-powered">
             <a href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener noreferrer">
@@ -150,10 +159,11 @@ add_shortcode('real_reviews_carousel', function ($atts) {
     $avg_r       = $count_r ? round($total_r / $count_r, 1) : 0;
     $total_count = count($all_reviews);
 
-    $biz_info = rr_fetch_business_info();
-    $company  = (!is_wp_error($biz_info) && !empty($biz_info['NickName']))
+    $biz_info       = rr_fetch_business_info();
+    $company        = (!is_wp_error($biz_info) && !empty($biz_info['NickName']))
         ? $biz_info['NickName']
         : get_bloginfo('name');
+    $company_id_opt = get_option('real_reviews_company_id', 'Com0000DEMO');
 
     $reviews      = array_slice($all_reviews, 0, max(1, intval($atts['limit'])));
     $container_id = 'rrc_' . uniqid();
@@ -167,7 +177,8 @@ add_shortcode('real_reviews_carousel', function ($atts) {
          style="--rr-accent:<?php echo esc_attr($accent); ?>"
          data-avg="<?php echo esc_attr($avg_r); ?>"
          data-total="<?php echo esc_attr($total_count); ?>"
-         data-company="<?php echo esc_attr($company); ?>">
+         data-company="<?php echo esc_attr($company); ?>"
+         data-company-id="<?php echo esc_attr($company_id_opt); ?>">
 
         <div class="rrc-body">
             <div class="rrc-info-panel"></div>
@@ -294,9 +305,10 @@ add_shortcode('real_reviews_badge', function ($atts) {
         $v = intval($r['product_evaluation'] ?? 0);
         if ($v > 0) { $total += $v; $count++; }
     }
-    $avg      = $count ? round($total / $count, 1) : 0;
-    $avg_r    = round($avg);
-    $pos_cls  = 'rr-badge--' . sanitize_html_class($atts['position']);
+    $avg            = $count ? round($total / $count, 1) : 0;
+    $avg_r          = round($avg);
+    $pos_cls        = 'rr-badge--' . sanitize_html_class($atts['position']);
+    $company_id_opt = get_option('real_reviews_company_id', 'Com0000DEMO');
 
     wp_enqueue_style('rr-suite-style');
 
@@ -312,6 +324,11 @@ add_shortcode('real_reviews_badge', function ($atts) {
         </div>
         <div class="rr-badge-count"><?php echo esc_html(count($reviews)); ?> reviews</div>
         <div class="rr-badge-verified">✓ Verified</div>
+        <a class="rr-badge-link"
+           href="https://realreviewsbyrp.com/<?php echo esc_attr($company_id_opt); ?>"
+           target="_blank" rel="noopener noreferrer">
+            See all reviews &rarr;
+        </a>
     </div>
     <?php
     return ob_get_clean();
@@ -406,13 +423,17 @@ add_shortcode('real_reviews_score', function ($atts) {
         $v = intval($r['product_evaluation'] ?? 0);
         if ($v > 0) { $total += $v; $count++; }
     }
-    $avg   = $count ? round($total / $count, 1) : 0;
-    $avg_r = round($avg);
+    $avg            = $count ? round($total / $count, 1) : 0;
+    $avg_r          = round($avg);
+    $company_id_opt = get_option('real_reviews_company_id', 'Com0000DEMO');
 
     wp_enqueue_style('rr-suite-style');
 
     ob_start(); ?>
-    <span class="rr-score-inline" style="--rr-accent:<?php echo esc_attr($accent); ?>">
+    <a class="rr-score-inline" style="--rr-accent:<?php echo esc_attr($accent); ?>"
+       href="https://realreviewsbyrp.com/<?php echo esc_attr($company_id_opt); ?>"
+       target="_blank" rel="noopener noreferrer"
+       title="See all reviews">
         <span class="rr-score-num"><?php echo esc_html($avg > 0 ? $avg : '—'); ?></span>
         <span class="rr-score-stars">
             <span style="color:<?php echo esc_attr($accent); ?>"><?php echo str_repeat('★', $avg_r); ?></span><span style="color:#d0d8e4"><?php echo str_repeat('★', 5 - $avg_r); ?></span>
@@ -420,7 +441,7 @@ add_shortcode('real_reviews_score', function ($atts) {
         <?php if ($atts['show_count'] !== 'false'): ?>
         <span class="rr-score-count"><?php echo esc_html($atts['label'] . ' ' . count($reviews) . ' reviews'); ?></span>
         <?php endif; ?>
-    </span>
+    </a>
     <?php
     return ob_get_clean();
 });

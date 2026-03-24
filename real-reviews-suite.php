@@ -2,7 +2,7 @@
 /*
 Plugin Name: Real Reviews Suite 
 Description: Sistema profesional de reseñas: Masonry Grid, Google Carousel y Formulario. Incluye Caché y Panel Externo.
-Version: 4.6
+Version: 4.7
 Author: Xperience Marketing Solutions
 */
 
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
 // Definimos la ruta del plugin
 define('RR_SUITE_PATH',    plugin_dir_path(__FILE__));
 define('RR_SUITE_URL',     plugin_dir_url(__FILE__));
-define('RR_SUITE_VERSION', '4.6');
+define('RR_SUITE_VERSION', '4.7');
 
 /* ==============================================================
    1. REGISTRO DE ASSETS (CSS y JS)
