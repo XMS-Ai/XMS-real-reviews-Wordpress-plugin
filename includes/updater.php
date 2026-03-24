@@ -18,6 +18,49 @@ define('RR_SUITE_GITHUB_USER', 'XMS-Ai');
 define('RR_SUITE_GITHUB_REPO', 'XMS-real-reviews-Wordpress-plugin');
 
 /* ==============================================================
+   DEBUG — visible solo en Settings con ?rr_debug=1
+   Eliminar este bloque una vez confirmado que funciona
+============================================================== */
+add_action('admin_notices', function() {
+    if (!current_user_can('manage_options')) return;
+    if (!isset($_GET['rr_debug']) || $_GET['rr_debug'] !== '1') return;
+
+    delete_transient('rrsuite_update_info');
+
+    $url      = 'https://api.github.com/repos/' . RR_SUITE_GITHUB_USER . '/' . RR_SUITE_GITHUB_REPO . '/releases/latest';
+    $response = wp_remote_get($url, [
+        'timeout' => 10,
+        'headers' => [
+            'Accept'     => 'application/vnd.github.v3+json',
+            'User-Agent' => 'RealReviewsSuite/' . RR_SUITE_VERSION,
+        ],
+    ]);
+
+    $plugin_slug     = plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php');
+    $http_code       = wp_remote_retrieve_response_code($response);
+    $body            = json_decode(wp_remote_retrieve_body($response));
+    $tag             = $body->tag_name ?? 'NOT FOUND';
+    $remote_version  = ltrim($tag, 'v');
+    $zipball         = $body->zipball_url ?? 'none';
+    $assets_count    = count($body->assets ?? []);
+    $error           = is_wp_error($response) ? $response->get_error_message() : 'none';
+
+    echo '<div class="notice notice-info" style="font-family:monospace;font-size:13px;padding:14px 18px;">';
+    echo '<strong>🔍 RealReviews Updater — Debug</strong><br><br>';
+    echo '📡 API URL: <code>' . esc_html($url) . '</code><br>';
+    echo '🔢 HTTP Code: <strong>' . esc_html($http_code) . '</strong><br>';
+    echo '❌ WP Error: <code>' . esc_html($error) . '</code><br>';
+    echo '🏷 Tag en GitHub: <strong>' . esc_html($tag) . '</strong><br>';
+    echo '🆕 Versión remota: <strong>' . esc_html($remote_version) . '</strong><br>';
+    echo '📦 Versión instalada: <strong>' . esc_html(RR_SUITE_VERSION) . '</strong><br>';
+    echo '🔗 Zipball URL: <code>' . esc_html($zipball) . '</code><br>';
+    echo '📎 Assets en release: <strong>' . esc_html($assets_count) . '</strong><br>';
+    echo '🔑 Plugin slug: <code>' . esc_html($plugin_slug) . '</code><br>';
+    echo '✅ ¿Update needed?: <strong>' . (version_compare($remote_version, RR_SUITE_VERSION, '>') ? 'SÍ' : 'NO — versiones iguales o remota menor') . '</strong>';
+    echo '</div>';
+});
+
+/* ==============================================================
    INYECTAR UPDATE EN EL TRANSIENT DE WP
 ============================================================== */
 add_filter('pre_set_site_transient_update_plugins', 'rrsuite_check_for_update');
