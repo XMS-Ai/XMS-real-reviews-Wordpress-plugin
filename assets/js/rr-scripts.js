@@ -158,7 +158,7 @@
                 +   '</div>'
                 +   '<div class="rrc-info-based">Based on <strong>' + cnt + '</strong> verified reviews</div>'
                 + '</div>'
-                + '<a class="rrc-info-brand-link" href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener">'
+                + '<a class="rrc-info-brand-link" href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener noreferrer">'
                 +   '<span style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.5px;text-transform:uppercase;">powered by</span>'
                 +   '<span>'
                 +     '<span style="color:#8BC53F;font-weight:800;font-size:13px;">Real</span>'

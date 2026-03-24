@@ -81,7 +81,7 @@ add_shortcode('real_reviews', function () {
         <div class="rr-grid"></div>
 
         <div class="rr-powered">
-            <a href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener">
+            <a href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener noreferrer">
                 Powered by <span class="p-g">Real</span><span class="p-b">Reviews</span><span>byRealPeople</span>
             </a>
         </div>
@@ -242,7 +242,7 @@ add_shortcode('real_reviews_form', function () {
         </div><!-- /#rrFormStep2 -->
 
         <div class="rr-powered" style="margin-top:24px;">
-            <a href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener">
+            <a href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener noreferrer">
                 Powered by <span class="p-g">Real</span><span class="p-b">Reviews</span><span>byRealPeople</span>
             </a>
         </div>
