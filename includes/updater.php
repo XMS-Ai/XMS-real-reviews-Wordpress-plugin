@@ -108,31 +108,6 @@ function rrsuite_fix_folder_name($source, $remote_source, $upgrader, $hook_extra
 }
 
 /* ==============================================================
-   DEBUG TEMPORAL — eliminar cuando funcione
-============================================================== */
-add_action('admin_notices', function() {
-    if (!current_user_can('manage_options')) return;
-
-    delete_transient('rrsuite_update_info');
-    $remote      = rrsuite_get_remote_info();
-    $plugin_file = plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php');
-    $transient   = get_site_transient('update_plugins');
-    $in_response = isset($transient->response[$plugin_file]);
-
-    $color  = $remote ? '#d1fae5' : '#fee2e2';
-    $border = $remote ? '#6ee7b7' : '#fca5a5';
-
-    echo '<div style="margin:10px 20px;padding:12px 18px;background:' . $color . ';border-left:4px solid ' . $border . ';font-family:monospace;font-size:13px;">';
-    echo '<strong>RR Updater Debug</strong><br>';
-    echo '📡 URL: <code>' . esc_html(RR_SUITE_UPDATE_URL) . '</code><br>';
-    echo '🆕 Versión remota (version.json): <strong>' . esc_html($remote ? $remote->version : 'ERROR — no se pudo leer') . '</strong><br>';
-    echo '📦 Versión instalada (RR_SUITE_VERSION): <strong>' . esc_html(RR_SUITE_VERSION) . '</strong><br>';
-    echo '🔑 Plugin file: <code>' . esc_html($plugin_file) . '</code><br>';
-    echo '✅ ¿Update inyectado en transient?: <strong>' . ($in_response ? 'SÍ' : 'NO') . '</strong>';
-    echo '</div>';
-});
-
-/* ==============================================================
    LIMPIAR CACHÉ AL ACTIVAR
 ============================================================== */
 register_activation_hook(RR_SUITE_PATH . 'real-reviews-suite.php', function() {
