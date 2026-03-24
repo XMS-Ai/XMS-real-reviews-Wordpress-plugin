@@ -25,10 +25,13 @@ define('RR_SUITE_UPDATE_URL',
 
 /* ==============================================================
    INYECTAR UPDATE EN EL TRANSIENT DE WP
+   Usa site_transient_update_plugins (lectura) en lugar de
+   pre_set_site_transient (escritura) — más confiable.
 ============================================================== */
-add_filter('pre_set_site_transient_update_plugins', 'rrsuite_check_for_update');
+add_filter('site_transient_update_plugins', 'rrsuite_check_for_update');
 function rrsuite_check_for_update($transient) {
-    if (empty($transient->checked)) return $transient;
+    if (!is_object($transient)) $transient = new stdClass();
+    if (!isset($transient->response)) $transient->response = [];
 
     $remote      = rrsuite_get_remote_info();
     $plugin_file = plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php');
@@ -44,6 +47,8 @@ function rrsuite_check_for_update($transient) {
             'tested'      => $remote->tested   ?? '6.7',
             'icons'       => [],
         ];
+    } else {
+        unset($transient->response[$plugin_file]);
     }
 
     return $transient;
