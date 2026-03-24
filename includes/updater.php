@@ -2,63 +2,26 @@
 /**
  * AUTO-UPDATER — REAL REVIEWS SUITE
  *
- * Detecta nuevas versiones publicadas como GitHub Releases y las integra
+ * Lee version.json desde el repo de GitHub (rama master) y lo integra
  * con el sistema de actualizaciones nativo de WordPress.
  *
- * CONFIGURACIÓN:
- *   1. Cambia RR_SUITE_GITHUB_USER por tu usuario de GitHub.
- *   2. Cambia RR_SUITE_GITHUB_REPO por el nombre del repositorio.
- *   3. Para publicar un update: crea un Release en GitHub con tag "v4.2",
- *      sube el ZIP del plugin como asset, y WordPress lo detecta solo.
+ * PARA PUBLICAR UNA ACTUALIZACIÓN:
+ *   1. Sube tus cambios al repo.
+ *   2. Edita version.json: cambia "version" al nuevo número.
+ *   3. Haz push. WordPress lo detecta en las próximas 12 horas
+ *      (o inmediatamente con ?force-check=1 en la página de Updates).
  */
 
 if (!defined('ABSPATH')) exit;
 
 define('RR_SUITE_GITHUB_USER', 'XMS-Ai');
 define('RR_SUITE_GITHUB_REPO', 'XMS-real-reviews-Wordpress-plugin');
-
-/* ==============================================================
-   DEBUG — visible solo en Settings con ?rr_debug=1
-   Eliminar este bloque una vez confirmado que funciona
-============================================================== */
-add_action('admin_notices', function() {
-    if (!current_user_can('manage_options')) return;
-    if (!isset($_GET['rr_debug']) || $_GET['rr_debug'] !== '1') return;
-
-    delete_transient('rrsuite_update_info');
-
-    $url      = 'https://api.github.com/repos/' . RR_SUITE_GITHUB_USER . '/' . RR_SUITE_GITHUB_REPO . '/releases/latest';
-    $response = wp_remote_get($url, [
-        'timeout' => 10,
-        'headers' => [
-            'Accept'     => 'application/vnd.github.v3+json',
-            'User-Agent' => 'RealReviewsSuite/' . RR_SUITE_VERSION,
-        ],
-    ]);
-
-    $plugin_slug     = plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php');
-    $http_code       = wp_remote_retrieve_response_code($response);
-    $body            = json_decode(wp_remote_retrieve_body($response));
-    $tag             = $body->tag_name ?? 'NOT FOUND';
-    $remote_version  = ltrim($tag, 'v');
-    $zipball         = $body->zipball_url ?? 'none';
-    $assets_count    = count($body->assets ?? []);
-    $error           = is_wp_error($response) ? $response->get_error_message() : 'none';
-
-    echo '<div class="notice notice-info" style="font-family:monospace;font-size:13px;padding:14px 18px;">';
-    echo '<strong>🔍 RealReviews Updater — Debug</strong><br><br>';
-    echo '📡 API URL: <code>' . esc_html($url) . '</code><br>';
-    echo '🔢 HTTP Code: <strong>' . esc_html($http_code) . '</strong><br>';
-    echo '❌ WP Error: <code>' . esc_html($error) . '</code><br>';
-    echo '🏷 Tag en GitHub: <strong>' . esc_html($tag) . '</strong><br>';
-    echo '🆕 Versión remota: <strong>' . esc_html($remote_version) . '</strong><br>';
-    echo '📦 Versión instalada: <strong>' . esc_html(RR_SUITE_VERSION) . '</strong><br>';
-    echo '🔗 Zipball URL: <code>' . esc_html($zipball) . '</code><br>';
-    echo '📎 Assets en release: <strong>' . esc_html($assets_count) . '</strong><br>';
-    echo '🔑 Plugin slug: <code>' . esc_html($plugin_slug) . '</code><br>';
-    echo '✅ ¿Update needed?: <strong>' . (version_compare($remote_version, RR_SUITE_VERSION, '>') ? 'SÍ' : 'NO — versiones iguales o remota menor') . '</strong>';
-    echo '</div>';
-});
+define('RR_SUITE_UPDATE_URL',
+    'https://raw.githubusercontent.com/'
+    . RR_SUITE_GITHUB_USER . '/'
+    . RR_SUITE_GITHUB_REPO
+    . '/master/version.json'
+);
 
 /* ==============================================================
    INYECTAR UPDATE EN EL TRANSIENT DE WP
@@ -67,18 +30,18 @@ add_filter('pre_set_site_transient_update_plugins', 'rrsuite_check_for_update');
 function rrsuite_check_for_update($transient) {
     if (empty($transient->checked)) return $transient;
 
-    $plugin_slug = plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php');
     $remote      = rrsuite_get_remote_info();
+    $plugin_file = plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php');
 
     if ($remote && version_compare($remote->version, RR_SUITE_VERSION, '>')) {
-        $transient->response[$plugin_slug] = (object) [
-            'slug'        => dirname($plugin_slug),
-            'plugin'      => $plugin_slug,
+        $transient->response[$plugin_file] = (object) [
+            'slug'        => dirname($plugin_file),
+            'plugin'      => $plugin_file,
             'new_version' => $remote->version,
             'url'         => 'https://realreviewsbyrealpeople.com/',
             'package'     => $remote->download_url,
-            'requires'    => '5.6',
-            'tested'      => '6.7',
+            'requires'    => $remote->requires ?? '5.6',
+            'tested'      => $remote->tested   ?? '6.7',
             'icons'       => [],
         ];
     }
@@ -93,116 +56,80 @@ add_filter('plugins_api', 'rrsuite_plugins_api_info', 20, 3);
 function rrsuite_plugins_api_info($result, $action, $args) {
     if ($action !== 'plugin_information') return $result;
 
-    $plugin_slug = dirname(plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php'));
-    if (!isset($args->slug) || $args->slug !== $plugin_slug) return $result;
+    $slug = dirname(plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php'));
+    if (empty($args->slug) || $args->slug !== $slug) return $result;
 
     $remote = rrsuite_get_remote_info();
     if (!$remote) return $result;
 
     return (object) [
         'name'          => 'Real Reviews Suite',
-        'slug'          => $plugin_slug,
+        'slug'          => $slug,
         'version'       => $remote->version,
         'author'        => '<a href="https://realreviewsbyrealpeople.com/">Xperience Marketing Solutions</a>',
-        'requires'      => '5.6',
-        'tested'        => '6.7',
-        'last_updated'  => $remote->last_updated,
+        'requires'      => $remote->requires ?? '5.6',
+        'tested'        => $remote->tested   ?? '6.7',
         'download_link' => $remote->download_url,
         'sections'      => [
-            'description' => '<p>Sistema profesional de reseñas: Masonry Grid, Google Carousel y Formulario de envío. Incluye caché, JSON-LD SEO y panel de administración.</p>',
-            'changelog'   => $remote->changelog,
+            'description' => '<p>Sistema profesional de reseñas: Masonry Grid, Carousel y Formulario. Incluye caché, JSON-LD SEO y panel de administración.</p>',
+            'changelog'   => $remote->changelog ?? '',
         ],
     ];
 }
 
 /* ==============================================================
-   LIMPIAR CACHÉ DE UPDATE AL ACTIVAR/DESACTIVAR
+   CORREGIR NOMBRE DE CARPETA AL INSTALAR
+   GitHub extrae el ZIP como "Repo-hash/" — lo renombramos al
+   nombre real del plugin para que WordPress lo reemplace bien.
+============================================================== */
+add_filter('upgrader_source_selection', 'rrsuite_fix_folder_name', 10, 4);
+function rrsuite_fix_folder_name($source, $remote_source, $upgrader, $hook_extra) {
+    global $wp_filesystem;
+
+    if (empty($hook_extra['plugin'])) return $source;
+
+    $plugin_file = plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php');
+    if ($hook_extra['plugin'] !== $plugin_file) return $source;
+
+    $correct_folder = trailingslashit($remote_source) . dirname($plugin_file);
+
+    if ($source !== trailingslashit($correct_folder)
+        && $wp_filesystem->move($source, $correct_folder)
+    ) {
+        return trailingslashit($correct_folder);
+    }
+
+    return $source;
+}
+
+/* ==============================================================
+   LIMPIAR CACHÉ AL ACTIVAR
 ============================================================== */
 register_activation_hook(RR_SUITE_PATH . 'real-reviews-suite.php', function() {
     delete_transient('rrsuite_update_info');
 });
 
 /* ==============================================================
-   FETCH INFO DESDE GITHUB RELEASES (CON CACHÉ 12H)
+   FETCH version.json DESDE GITHUB (CON CACHÉ 12H)
 ============================================================== */
 function rrsuite_get_remote_info() {
     $cached = get_transient('rrsuite_update_info');
     if ($cached !== false) return $cached;
 
-    $url = sprintf(
-        'https://api.github.com/repos/%s/%s/releases/latest',
-        RR_SUITE_GITHUB_USER,
-        RR_SUITE_GITHUB_REPO
-    );
-
-    $response = wp_remote_get($url, [
-        'timeout' => 10,
-        'headers' => [
-            'Accept'     => 'application/vnd.github.v3+json',
-            'User-Agent' => 'RealReviewsSuite/' . RR_SUITE_VERSION,
-        ],
+    $response = wp_remote_get(RR_SUITE_UPDATE_URL, [
+        'timeout'    => 10,
+        'user-agent' => 'RealReviewsSuite/' . RR_SUITE_VERSION . '; ' . get_bloginfo('url'),
     ]);
 
     if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
         return false;
     }
 
-    $body = json_decode(wp_remote_retrieve_body($response));
+    $data = json_decode(wp_remote_retrieve_body($response));
 
-    if (empty($body->tag_name)) return false;
-
-    // Buscar el ZIP entre los assets del release
-    $download_url = '';
-    if (!empty($body->assets)) {
-        foreach ($body->assets as $asset) {
-            if (substr($asset->name, -4) === '.zip') {
-                $download_url = $asset->browser_download_url;
-                break;
-            }
-        }
-    }
-
-    // Fallback: zipball automático de GitHub si no hay asset manual
-    if (!$download_url) {
-        $download_url = $body->zipball_url ?? '';
-    }
-
-    if (!$download_url) return false;
-
-    // Convertir markdown del changelog a HTML básico
-    $changelog = rrsuite_md_to_html($body->body ?? '');
-
-    $data = (object) [
-        'version'      => ltrim($body->tag_name, 'v'),
-        'download_url' => $download_url,
-        'last_updated' => isset($body->published_at)
-            ? date('Y-m-d', strtotime($body->published_at))
-            : '',
-        'changelog'    => $changelog,
-    ];
+    if (empty($data->version) || empty($data->download_url)) return false;
 
     set_transient('rrsuite_update_info', $data, 12 * HOUR_IN_SECONDS);
 
     return $data;
-}
-
-/* ==============================================================
-   HELPER: MARKDOWN BÁSICO A HTML (PARA CHANGELOG)
-============================================================== */
-function rrsuite_md_to_html($text) {
-    if (empty($text)) return '<p>No changelog available.</p>';
-
-    $text = esc_html($text);
-    // Headings
-    $text = preg_replace('/^### (.+)$/m', '<h4>$1</h4>', $text);
-    $text = preg_replace('/^## (.+)$/m',  '<h3>$1</h3>', $text);
-    // Lists
-    $text = preg_replace('/^[\*\-] (.+)$/m', '<li>$1</li>', $text);
-    $text = preg_replace('/(<li>.*<\/li>)/s', '<ul>$1</ul>', $text);
-    // Bold
-    $text = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $text);
-    // Line breaks
-    $text = nl2br($text);
-
-    return $text;
 }
