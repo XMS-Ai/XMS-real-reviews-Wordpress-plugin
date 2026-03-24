@@ -18,6 +18,11 @@ You are the release engineer for **Real Reviews Suite**. Your job is to publish 
 | `real-reviews-suite.php` | `Version: X.X` in header + `define('RR_SUITE_VERSION', 'X.X')` |
 | `version.json` | `"version": "X.X"` + `"changelog"` with the changes |
 
+> ⚠️ CRÍTICO: Ambos archivos deben tener **exactamente el mismo número de versión**.
+> Si `version.json` dice `4.6` pero `real-reviews-suite.php` dice `4.5`,
+> WordPress descarga e instala el ZIP pero sigue leyendo `4.5` del header del plugin
+> y la notificación de update no desaparece nunca.
+
 ## version.json Structure
 ```json
 {
