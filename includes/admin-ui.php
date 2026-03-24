@@ -446,6 +446,9 @@ body.rrsuite-active .error           { display: none !important; }
 .rr-sc-num.n1 { background: linear-gradient(135deg,var(--rb),#0094cc); }
 .rr-sc-num.n2 { background: linear-gradient(135deg,var(--rg),#6ea82d); }
 .rr-sc-num.n3 { background: linear-gradient(135deg,#f59e0b,#d97706); }
+.rr-sc-num.n4 { background: linear-gradient(135deg,#8b5cf6,#6d28d9); }
+.rr-sc-num.n5 { background: linear-gradient(135deg,#ec4899,#be185d); }
+.rr-sc-num.n6 { background: linear-gradient(135deg,#10b981,#059669); }
 .rr-sc-head-text h3 { margin:0; font-size:14px; font-weight:700; color:var(--rtext); }
 .rr-sc-head-text p  { margin:2px 0 0; font-size:11.5px; color:var(--rmuted); }
 .rr-sc-body { padding: 18px 22px; }
@@ -629,6 +632,7 @@ function rrsuite_shortcode_page() { ?>
                             Copy
                         </button>
                     </div>
+                    <p class="rr-hint" style="margin-top:10px;">Optional: <code>source="Google"</code> <code>min_stars="4"</code> <code>limit="6"</code> <code>title="Our Reviews"</code></p>
                 </div>
             </div>
 
@@ -667,6 +671,67 @@ function rrsuite_shortcode_page() { ?>
                             Copy
                         </button>
                     </div>
+                    <p class="rr-hint" style="margin-top:10px;">Optional: <code>source="Google"</code> <code>min_stars="4"</code> <code>limit="6"</code></p>
+                </div>
+            </div>
+
+            <div class="rr-sc-item">
+                <div class="rr-sc-head">
+                    <div class="rr-sc-num n4">4</div>
+                    <div class="rr-sc-head-text">
+                        <h3>Trust Badge</h3>
+                        <p>Floating badge with score and stars. Fixed bottom-right by default.</p>
+                    </div>
+                </div>
+                <div class="rr-sc-body">
+                    <div class="rr-sc-row">
+                        <div class="rr-sc-code">[real_reviews_badge]</div>
+                        <button class="rr-copy-btn" onclick="rrCopy(this,'[real_reviews_badge]')">
+                            <span class="dashicons dashicons-clipboard" style="font-size:13px;width:13px;height:13px;line-height:1;vertical-align:middle;"></span>
+                            Copy
+                        </button>
+                    </div>
+                    <p class="rr-hint" style="margin-top:10px;">Optional: <code>position="bottom-right"</code> <code>position="bottom-left"</code> <code>position="static"</code></p>
+                </div>
+            </div>
+
+            <div class="rr-sc-item">
+                <div class="rr-sc-head">
+                    <div class="rr-sc-num n5">5</div>
+                    <div class="rr-sc-head-text">
+                        <h3>Featured Review</h3>
+                        <p>Highlights your best review in a large quote format — perfect for landing pages.</p>
+                    </div>
+                </div>
+                <div class="rr-sc-body">
+                    <div class="rr-sc-row">
+                        <div class="rr-sc-code">[real_reviews_featured]</div>
+                        <button class="rr-copy-btn" onclick="rrCopy(this,'[real_reviews_featured]')">
+                            <span class="dashicons dashicons-clipboard" style="font-size:13px;width:13px;height:13px;line-height:1;vertical-align:middle;"></span>
+                            Copy
+                        </button>
+                    </div>
+                    <p class="rr-hint" style="margin-top:10px;">Optional: <code>source="Google"</code> <code>min_stars="5"</code> <code>random="true"</code></p>
+                </div>
+            </div>
+
+            <div class="rr-sc-item">
+                <div class="rr-sc-head">
+                    <div class="rr-sc-num n6">6</div>
+                    <div class="rr-sc-head-text">
+                        <h3>Inline Score</h3>
+                        <p>Compact score + stars to embed inside any text, heading or button.</p>
+                    </div>
+                </div>
+                <div class="rr-sc-body">
+                    <div class="rr-sc-row">
+                        <div class="rr-sc-code">[real_reviews_score]</div>
+                        <button class="rr-copy-btn" onclick="rrCopy(this,'[real_reviews_score]')">
+                            <span class="dashicons dashicons-clipboard" style="font-size:13px;width:13px;height:13px;line-height:1;vertical-align:middle;"></span>
+                            Copy
+                        </button>
+                    </div>
+                    <p class="rr-hint" style="margin-top:10px;">Optional: <code>source="Google"</code> <code>show_count="false"</code> <code>label="Based on"</code></p>
                 </div>
             </div>
 

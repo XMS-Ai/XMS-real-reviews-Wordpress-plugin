@@ -1,18 +1,26 @@
 <?php
 /**
- * SHORTCODES - REAL REVIEWS SUITE v4.1
+ * SHORTCODES - REAL REVIEWS SUITE v4.6
  */
 
-if (!defined('ABSPATH'))
-    exit;
+if (!defined('ABSPATH')) exit;
 
 /* ==============================================================
- 1.  [real_reviews]  —  Masonry Grid ============================================================== */
-add_shortcode('real_reviews', function () {
+ 1.  [real_reviews]  —  Masonry Grid
+     Params: source, min_stars, limit, title
+============================================================== */
+add_shortcode('real_reviews', function ($atts) {
+    $atts = shortcode_atts([
+        'source'    => '',
+        'min_stars' => 0,
+        'limit'     => 0,
+        'title'     => '',
+    ], $atts, 'real_reviews');
+
     $api_url = rr_get_api_url();
-    $accent = get_option('real_reviews_accent_color', '#f39c12');
-    $title = get_option('real_reviews_section_title', 'Customer Reviews');
-    $data = real_reviews_fetch_and_decode($api_url);
+    $accent  = get_option('real_reviews_accent_color', '#f39c12');
+    $title   = !empty($atts['title']) ? $atts['title'] : get_option('real_reviews_section_title', 'Customer Reviews');
+    $data    = real_reviews_fetch_and_decode($api_url);
 
     if (is_wp_error($data))
         return '<p>Error: ' . esc_html($data->get_error_message()) . '</p>';
@@ -20,23 +28,30 @@ add_shortcode('real_reviews', function () {
         return '<p>No reviews found.</p>';
 
     $reviews = array_values(array_filter($data, fn($r) => is_array($r) && (isset($r['comment']) || isset($r['guest_name']))));
-    if (empty($reviews))
-        return '<p>No valid reviews found.</p>';
+    if (empty($reviews)) return '<p>No valid reviews found.</p>';
+
+    /* Apply shortcode filters */
+    if (!empty($atts['source'])) {
+        $reviews = array_values(array_filter($reviews, fn($r) => ($r['reviewSite'] ?? 'Other') === $atts['source']));
+    }
+    if (intval($atts['min_stars']) > 0) {
+        $reviews = array_values(array_filter($reviews, fn($r) => intval($r['product_evaluation'] ?? 0) >= intval($atts['min_stars'])));
+    }
+    if (intval($atts['limit']) > 0) {
+        $reviews = array_slice($reviews, 0, intval($atts['limit']));
+    }
+
+    if (empty($reviews)) return '<p>No reviews match the selected filters.</p>';
 
     /* Stats */
-    $total = 0;
-    $count = 0;
-    $sources = [];
+    $total = 0; $count = 0; $sources = [];
     foreach ($reviews as $r) {
         $rating = intval($r['product_evaluation'] ?? 0);
-        if ($rating > 0) {
-            $total += $rating;
-            $count++;
-        }
+        if ($rating > 0) { $total += $rating; $count++; }
         $src = $r['reviewSite'] ?? 'Other';
         $sources[$src] = ($sources[$src] ?? 0) + 1;
     }
-    $avg = $count ? round($total / $count, 1) : 0;
+    $avg         = $count ? round($total / $count, 1) : 0;
     $avg_rounded = round($avg);
     $container_id = 'rr_grid_' . uniqid();
 
@@ -46,7 +61,6 @@ add_shortcode('real_reviews', function () {
     ob_start(); ?>
     <div id="<?php echo esc_attr($container_id); ?>" class="rr-wrap" style="--rr-accent:<?php echo esc_attr($accent); ?>">
 
-        <!-- Header -->
         <div class="rr-header">
             <h2 class="rr-title"><?php echo esc_html($title); ?></h2>
             <div class="rr-summary">
@@ -58,26 +72,25 @@ add_shortcode('real_reviews', function () {
             </div>
         </div>
 
-        <!-- Platform tabs -->
+        <?php if (empty($atts['source'])): ?>
         <div class="rr-tabs-wrapper">
             <button class="rr-tab active" data-src="__all">
                 <div class="rr-all-circle">ALL</div>
                 <span><?php echo count($reviews); ?></span>
             </button>
             <?php foreach ($sources as $s => $c): ?>
-                <button class="rr-tab" data-src="<?php echo esc_attr($s); ?>">
-                    <div class="rr-tab-img-box">
-                        <img src="https://img.realreviewsbyrp.com/files/app-img/social-media/<?php echo esc_attr($s); ?>.jpg"
-                             onerror="this.src='https://img.realreviewsbyrp.com/files/app-img/social-media/default.jpg'"
-                             alt="<?php echo esc_attr($s); ?>" loading="lazy">
-                    </div>
-                    <span><?php echo esc_html($c); ?></span>
-                </button>
-            <?php
-    endforeach; ?>
+            <button class="rr-tab" data-src="<?php echo esc_attr($s); ?>">
+                <div class="rr-tab-img-box">
+                    <img src="https://img.realreviewsbyrp.com/files/app-img/social-media/<?php echo esc_attr($s); ?>.jpg"
+                         onerror="this.src='https://img.realreviewsbyrp.com/files/app-img/social-media/default.jpg'"
+                         alt="<?php echo esc_attr($s); ?>" loading="lazy">
+                </div>
+                <span><?php echo esc_html($c); ?></span>
+            </button>
+            <?php endforeach; ?>
         </div>
+        <?php endif; ?>
 
-        <!-- Cards injected by JS -->
         <div class="rr-grid"></div>
 
         <div class="rr-powered">
@@ -99,39 +112,50 @@ add_shortcode('real_reviews', function () {
 });
 
 /* ==============================================================
- 2.  [real_reviews_carousel]  —  3-up Carousel ============================================================== */
-add_shortcode('real_reviews_carousel', function () {
+ 2.  [real_reviews_carousel]  —  Carousel
+     Params: source, min_stars, limit
+============================================================== */
+add_shortcode('real_reviews_carousel', function ($atts) {
+    $atts = shortcode_atts([
+        'source'    => '',
+        'min_stars' => 0,
+        'limit'     => 9,
+    ], $atts, 'real_reviews_carousel');
+
     $api_url = rr_get_api_url();
-    $accent = get_option('real_reviews_accent_color', '#f39c12');
-    $data = real_reviews_fetch_and_decode($api_url);
+    $accent  = get_option('real_reviews_accent_color', '#f39c12');
+    $data    = real_reviews_fetch_and_decode($api_url);
 
     if (is_wp_error($data))
         return '<p>Error: ' . esc_html($data->get_error_message()) . '</p>';
     if (!is_array($data) || empty($data))
         return '<p>No reviews found.</p>';
 
-    /* All reviews with a comment */
     $all_reviews = array_values(array_filter($data, fn($r) => isset($r['comment'])));
 
-    /* Stats from full list */
-    $total_r = 0;
-    $count_r = 0;
+    /* Apply shortcode filters */
+    if (!empty($atts['source'])) {
+        $all_reviews = array_values(array_filter($all_reviews, fn($r) => ($r['reviewSite'] ?? '') === $atts['source']));
+    }
+    if (intval($atts['min_stars']) > 0) {
+        $all_reviews = array_values(array_filter($all_reviews, fn($r) => intval($r['product_evaluation'] ?? 0) >= intval($atts['min_stars'])));
+    }
+
+    /* Stats */
+    $total_r = 0; $count_r = 0;
     foreach ($all_reviews as $r) {
         $v = intval($r['product_evaluation'] ?? 0);
-        if ($v > 0) {
-            $total_r += $v;
-            $count_r++;
-        }
+        if ($v > 0) { $total_r += $v; $count_r++; }
     }
-    $avg_r = $count_r ? round($total_r / $count_r, 1) : 0;
+    $avg_r       = $count_r ? round($total_r / $count_r, 1) : 0;
     $total_count = count($all_reviews);
+
     $biz_info = rr_fetch_business_info();
     $company  = (!is_wp_error($biz_info) && !empty($biz_info['NickName']))
         ? $biz_info['NickName']
         : get_bloginfo('name');
 
-    /* Latest 9 */
-    $reviews = array_slice($all_reviews, 0, 9);
+    $reviews      = array_slice($all_reviews, 0, max(1, intval($atts['limit'])));
     $container_id = 'rrc_' . uniqid();
 
     wp_enqueue_style('rr-suite-style');
@@ -145,13 +169,8 @@ add_shortcode('real_reviews_carousel', function () {
          data-total="<?php echo esc_attr($total_count); ?>"
          data-company="<?php echo esc_attr($company); ?>">
 
-        <!-- Main row: info panel + stage -->
         <div class="rrc-body">
-
-            <!-- Left info panel (populated by JS) -->
             <div class="rrc-info-panel"></div>
-
-            <!-- Stage: prev + viewport + next -->
             <div class="rrc-stage-wrap">
                 <button class="rrc-arrow rrc-prev" aria-label="Previous">&#8592;</button>
                 <div class="rrc-viewport">
@@ -159,12 +178,9 @@ add_shortcode('real_reviews_carousel', function () {
                 </div>
                 <button class="rrc-arrow rrc-next" aria-label="Next">&#8594;</button>
             </div>
-
         </div>
 
-        <!-- Dots -->
         <div class="rrc-dots"></div>
-
 
     </div>
     <script>
@@ -179,7 +195,8 @@ add_shortcode('real_reviews_carousel', function () {
 });
 
 /* ==============================================================
- 3.  [real_reviews_form]  —  2-Step Submission Form ============================================================== */
+ 3.  [real_reviews_form]  —  2-Step Submission Form
+============================================================== */
 add_shortcode('real_reviews_form', function () {
     $company_id = get_option('real_reviews_company_id', 'Com0000DEMO');
 
@@ -189,7 +206,6 @@ add_shortcode('real_reviews_form', function () {
     ob_start(); ?>
     <div class="rr-form-wrap">
 
-        <!-- STEP 1: Always visible -->
         <h2 class="rr-form-title">Leave Us a Review</h2>
         <p class="rr-form-subtitle">Your feedback helps us improve and lets others know about your experience.</p>
 
@@ -206,7 +222,6 @@ add_shortcode('real_reviews_form', function () {
             <div id="rrErrorStar" class="rr-error">Please select a star rating before submitting.</div>
         </div>
 
-        <!-- STEP 2: Revealed after first star click -->
         <div id="rrFormStep2" class="rr-form-step2">
 
             <div class="rr-form-group">
@@ -239,7 +254,7 @@ add_shortcode('real_reviews_form', function () {
 
             <div id="rrResp" class="rr-resp-box"></div>
 
-        </div><!-- /#rrFormStep2 -->
+        </div>
 
         <div class="rr-powered" style="margin-top:24px;">
             <a href="https://realreviewsbyrealpeople.com/" target="_blank" rel="noopener noreferrer">
@@ -248,6 +263,164 @@ add_shortcode('real_reviews_form', function () {
         </div>
 
     </div>
+    <?php
+    return ob_get_clean();
+});
+
+/* ==============================================================
+ 4.  [real_reviews_badge]  —  Trust Badge
+     Params: position (bottom-right | bottom-left | static), source
+============================================================== */
+add_shortcode('real_reviews_badge', function ($atts) {
+    $atts = shortcode_atts([
+        'position' => 'bottom-right',
+        'source'   => '',
+    ], $atts, 'real_reviews_badge');
+
+    $api_url = rr_get_api_url();
+    $accent  = get_option('real_reviews_accent_color', '#f39c12');
+    $data    = real_reviews_fetch_and_decode($api_url);
+
+    if (is_wp_error($data) || !is_array($data)) return '';
+
+    $reviews = array_values(array_filter($data, fn($r) => isset($r['comment'])));
+    if (!empty($atts['source'])) {
+        $reviews = array_values(array_filter($reviews, fn($r) => ($r['reviewSite'] ?? '') === $atts['source']));
+    }
+    if (empty($reviews)) return '';
+
+    $total = 0; $count = 0;
+    foreach ($reviews as $r) {
+        $v = intval($r['product_evaluation'] ?? 0);
+        if ($v > 0) { $total += $v; $count++; }
+    }
+    $avg      = $count ? round($total / $count, 1) : 0;
+    $avg_r    = round($avg);
+    $pos_cls  = 'rr-badge--' . sanitize_html_class($atts['position']);
+
+    wp_enqueue_style('rr-suite-style');
+
+    ob_start(); ?>
+    <div class="rr-badge <?php echo esc_attr($pos_cls); ?>" style="--rr-accent:<?php echo esc_attr($accent); ?>" role="complementary" aria-label="Review rating badge">
+        <button class="rr-badge-close" onclick="this.closest('.rr-badge').style.display='none'" aria-label="Close">×</button>
+        <div class="rr-badge-logo">
+            <span class="rr-badge-logo-g">Real</span><span class="rr-badge-logo-b">Reviews</span>
+        </div>
+        <div class="rr-badge-score"><?php echo esc_html($avg > 0 ? $avg : '—'); ?></div>
+        <div class="rr-badge-stars">
+            <span style="color:#8BC53F"><?php echo str_repeat('★', $avg_r); ?></span><span style="color:rgba(0,0,0,.15)"><?php echo str_repeat('★', 5 - $avg_r); ?></span>
+        </div>
+        <div class="rr-badge-count"><?php echo esc_html(count($reviews)); ?> reviews</div>
+        <div class="rr-badge-verified">✓ Verified</div>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+/* ==============================================================
+ 5.  [real_reviews_featured]  —  Featured Review
+     Params: source, min_stars (default 5), random (true|false)
+============================================================== */
+add_shortcode('real_reviews_featured', function ($atts) {
+    $atts = shortcode_atts([
+        'source'    => '',
+        'min_stars' => 5,
+        'random'    => 'false',
+    ], $atts, 'real_reviews_featured');
+
+    $api_url = rr_get_api_url();
+    $accent  = get_option('real_reviews_accent_color', '#f39c12');
+    $data    = real_reviews_fetch_and_decode($api_url);
+
+    if (is_wp_error($data) || !is_array($data)) return '';
+
+    $reviews = array_values(array_filter($data, fn($r) => isset($r['comment'])));
+
+    if (!empty($atts['source'])) {
+        $reviews = array_values(array_filter($reviews, fn($r) => ($r['reviewSite'] ?? '') === $atts['source']));
+    }
+    if (intval($atts['min_stars']) > 0) {
+        $reviews = array_values(array_filter($reviews, fn($r) => intval($r['product_evaluation'] ?? 0) >= intval($atts['min_stars'])));
+    }
+    if (empty($reviews)) return '';
+
+    $review = ($atts['random'] === 'true') ? $reviews[array_rand($reviews)] : $reviews[0];
+
+    $name    = $review['guest_name']       ?? 'Anonymous';
+    $comment = $review['comment']          ?? '';
+    $rating  = intval($review['product_evaluation'] ?? 5);
+    $date    = $review['comment_date']     ?? '';
+    $src     = $review['reviewSite']       ?? '';
+
+    wp_enqueue_style('rr-suite-style');
+
+    ob_start(); ?>
+    <div class="rr-featured" style="--rr-accent:<?php echo esc_attr($accent); ?>">
+        <div class="rr-featured-quote">❝</div>
+        <div class="rr-featured-text"><?php echo esc_html($comment); ?></div>
+        <div class="rr-featured-stars">
+            <span style="color:<?php echo esc_attr($accent); ?>"><?php echo str_repeat('★', min(5, $rating)); ?></span><span style="color:#d0d8e4"><?php echo str_repeat('★', max(0, 5 - $rating)); ?></span>
+        </div>
+        <div class="rr-featured-author">
+            <div class="rr-featured-meta">
+                <strong><?php echo esc_html($name); ?></strong>
+                <?php if ($date): ?><span><?php echo esc_html($date); ?></span><?php endif; ?>
+            </div>
+            <?php if ($src): ?>
+            <img src="https://img.realreviewsbyrp.com/files/app-img/social-media/<?php echo esc_attr($src); ?>.jpg"
+                 onerror="this.style.display='none'"
+                 alt="<?php echo esc_attr($src); ?>"
+                 loading="lazy"
+                 class="rr-featured-platform">
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+});
+
+/* ==============================================================
+ 6.  [real_reviews_score]  —  Inline Score Widget
+     Params: source, show_count (true|false), label
+============================================================== */
+add_shortcode('real_reviews_score', function ($atts) {
+    $atts = shortcode_atts([
+        'source'     => '',
+        'show_count' => 'true',
+        'label'      => 'Based on',
+    ], $atts, 'real_reviews_score');
+
+    $api_url = rr_get_api_url();
+    $accent  = get_option('real_reviews_accent_color', '#f39c12');
+    $data    = real_reviews_fetch_and_decode($api_url);
+
+    if (is_wp_error($data) || !is_array($data)) return '';
+
+    $reviews = array_values(array_filter($data, fn($r) => isset($r['comment'])));
+    if (!empty($atts['source'])) {
+        $reviews = array_values(array_filter($reviews, fn($r) => ($r['reviewSite'] ?? '') === $atts['source']));
+    }
+
+    $total = 0; $count = 0;
+    foreach ($reviews as $r) {
+        $v = intval($r['product_evaluation'] ?? 0);
+        if ($v > 0) { $total += $v; $count++; }
+    }
+    $avg   = $count ? round($total / $count, 1) : 0;
+    $avg_r = round($avg);
+
+    wp_enqueue_style('rr-suite-style');
+
+    ob_start(); ?>
+    <span class="rr-score-inline" style="--rr-accent:<?php echo esc_attr($accent); ?>">
+        <span class="rr-score-num"><?php echo esc_html($avg > 0 ? $avg : '—'); ?></span>
+        <span class="rr-score-stars">
+            <span style="color:<?php echo esc_attr($accent); ?>"><?php echo str_repeat('★', $avg_r); ?></span><span style="color:#d0d8e4"><?php echo str_repeat('★', 5 - $avg_r); ?></span>
+        </span>
+        <?php if ($atts['show_count'] !== 'false'): ?>
+        <span class="rr-score-count"><?php echo esc_html($atts['label'] . ' ' . count($reviews) . ' reviews'); ?></span>
+        <?php endif; ?>
+    </span>
     <?php
     return ob_get_clean();
 });

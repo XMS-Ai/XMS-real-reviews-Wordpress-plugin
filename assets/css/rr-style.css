@@ -489,6 +489,106 @@
 }
 
 /* ================================================================
+   3b. TRUST BADGE  [real_reviews_badge]
+================================================================ */
+.rr-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+    border: 1.5px solid var(--rr-border);
+    border-radius: 18px;
+    padding: 18px 22px 14px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.1), 0 1px 4px rgba(0,0,0,.06);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-width: 120px;
+    text-align: center;
+    position: relative;
+}
+.rr-badge--bottom-right { position: fixed; bottom: 24px; right: 24px; z-index: 9999; }
+.rr-badge--bottom-left  { position: fixed; bottom: 24px; left:  24px; z-index: 9999; }
+.rr-badge--static       { position: static; }
+.rr-badge-close {
+    position: absolute;
+    top: 8px; right: 10px;
+    background: none; border: none; cursor: pointer;
+    font-size: 16px; color: var(--rr-muted); line-height: 1;
+    padding: 2px 4px; transition: color .15s;
+}
+.rr-badge-close:hover { color: var(--rr-text); }
+.rr-badge-logo { line-height: 1; }
+.rr-badge-logo-g { color: #8BC53F; font-weight: 900; font-size: 14px; }
+.rr-badge-logo-b { color: #00AEEF; font-weight: 900; font-size: 14px; }
+.rr-badge-score {
+    font-size: 2rem; font-weight: 900;
+    color: var(--rr-text); line-height: 1;
+}
+.rr-badge-stars { font-size: 1rem; letter-spacing: 2px; line-height: 1; }
+.rr-badge-count { font-size: 11px; color: var(--rr-muted); font-weight: 600; }
+.rr-badge-verified {
+    font-size: 10px; font-weight: 700; color: #8BC53F;
+    background: rgba(139,197,63,.1); border: 1px solid rgba(139,197,63,.3);
+    border-radius: 20px; padding: 3px 9px; letter-spacing: .3px;
+}
+
+/* ================================================================
+   3c. FEATURED REVIEW  [real_reviews_featured]
+================================================================ */
+.rr-featured {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--rr-card);
+    border-radius: 20px;
+    padding: 48px 52px 40px;
+    box-shadow: var(--rr-shadow);
+    border: 1px solid var(--rr-border);
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+}
+.rr-featured-quote {
+    font-size: 4.5rem; line-height: 1; margin-bottom: 8px;
+    font-family: Georgia, serif;
+    background: linear-gradient(135deg, #8BC53F, #00AEEF);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: .6;
+}
+.rr-featured-text {
+    font-size: 1.18rem; line-height: 1.8;
+    color: #2d3a4a; font-style: italic; margin-bottom: 22px;
+}
+.rr-featured-stars {
+    font-size: 1.3rem; letter-spacing: 3px; margin-bottom: 22px; line-height: 1;
+}
+.rr-featured-author {
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; flex-wrap: wrap;
+}
+.rr-featured-meta { display: flex; flex-direction: column; gap: 3px; }
+.rr-featured-meta strong { font-size: .95rem; color: var(--rr-text); font-weight: 700; }
+.rr-featured-meta span   { font-size: .8rem; color: var(--rr-muted); }
+.rr-featured-platform {
+    height: 26px; width: auto; object-fit: contain; border-radius: 5px;
+}
+@media(max-width:640px) {
+    .rr-featured { padding: 32px 24px 28px; }
+    .rr-featured-text { font-size: 1rem; }
+}
+
+/* ================================================================
+   3d. INLINE SCORE  [real_reviews_score]
+================================================================ */
+.rr-score-inline {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    vertical-align: middle;
+}
+.rr-score-num   { font-size: 1.1em; font-weight: 800; color: var(--rr-accent); line-height: 1; }
+.rr-score-stars { font-size: .95em; letter-spacing: 1px; line-height: 1; }
+.rr-score-count { font-size: .85em; color: var(--rr-muted); font-weight: 500; }
+
+/* ================================================================
    3.  REVIEW FORM  [real_reviews_form]
 ================================================================ */
 
