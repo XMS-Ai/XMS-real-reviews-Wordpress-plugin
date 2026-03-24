@@ -14,8 +14,8 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('RR_SUITE_GITHUB_USER', 'cristiancodg');
-define('RR_SUITE_GITHUB_REPO', 'XMS-real-reviews-wordpress-plugin');
+define('RR_SUITE_GITHUB_USER', 'XMS-Ai');
+define('RR_SUITE_GITHUB_REPO', 'XMS-real-reviews-Wordpress-plugin');
 
 /* ==============================================================
    INYECTAR UPDATE EN EL TRANSIENT DE WP
