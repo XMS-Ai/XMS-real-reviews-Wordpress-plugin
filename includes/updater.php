@@ -91,17 +91,28 @@ add_filter('upgrader_source_selection', 'rrsuite_fix_folder_name', 10, 4);
 function rrsuite_fix_folder_name($source, $remote_source, $upgrader, $hook_extra) {
     global $wp_filesystem;
 
-    if (empty($hook_extra['plugin'])) return $source;
-
     $plugin_file = plugin_basename(RR_SUITE_PATH . 'real-reviews-suite.php');
-    if ($hook_extra['plugin'] !== $plugin_file) return $source;
 
-    $correct_folder = trailingslashit($remote_source) . dirname($plugin_file);
+    // Si hook_extra tiene plugin, verificar que sea el nuestro
+    if (!empty($hook_extra['plugin']) && $hook_extra['plugin'] !== $plugin_file) {
+        return $source;
+    }
 
-    if ($source !== trailingslashit($correct_folder)
-        && $wp_filesystem->move($source, $correct_folder)
-    ) {
-        return trailingslashit($correct_folder);
+    // Verificar que el ZIP extraído contiene nuestro archivo principal
+    if (!$wp_filesystem->exists(trailingslashit($source) . 'real-reviews-suite.php')) {
+        return $source;
+    }
+
+    $target = trailingslashit($remote_source) . dirname($plugin_file);
+
+    // Ya tiene el nombre correcto
+    if (trailingslashit($source) === trailingslashit($target)) {
+        return $source;
+    }
+
+    // Renombrar
+    if ($wp_filesystem->move($source, $target)) {
+        return trailingslashit($target);
     }
 
     return $source;
